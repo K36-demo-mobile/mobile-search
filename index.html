@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>K36 Demo Mobile Search</title>
+  <style>
+    body { background:#000; color:#fff; font-family: Arial, sans-serif; padding:16px; }
+    .search { width:100%; padding:14px; border-radius:14px; border:1px solid #333; background:#111; color:#fff; }
+    .card { margin-top:16px; padding:16px; border:1px solid #222; border-radius:18px; background:#0b0b0b; }
+    .btn { margin-top:10px; padding:10px 14px; border:none; border-radius:12px; cursor:pointer; }
+    .primary { background:#fff; color:#000; }
+    .secondary { background:#1a1a1a; color:#fff; border:1px solid #333; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <h2>📱 K36 Demo Search</h2>
+  <input id="searchInput" class="search" placeholder="搜尋遊戲商，例如 PG / EVO" />
+  <div id="results"></div>
+
+  <script>
+    const vendors = [
+      { name: 'PG Soft', keyword: ['pg','pocket games'], link: 'https://demo-link.com/pg', user: 'demo001', pass: '123456' },
+      { name: 'Evolution', keyword: ['evo','evolution'], link: 'https://demo-link.com/evo', user: 'evo001', pass: '654321' },
+      { name: 'JILI', keyword: ['jili'], link: 'https://demo-link.com/jili', user: '', pass: '' }
+    ];
+
+    const input = document.getElementById('searchInput');
+    const results = document.getElementById('results');
+
+    function render(list) {
+      results.innerHTML = '';
+      list.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>🎮 ${v.name}</h3>
+          <p>🔗 ${v.link}</p>
+          ${v.user ? `<p>👤 ${v.user}</p><p>🔒 ${v.pass}</p>` : '<p>免帳密登入</p>'}
+          <button class="btn primary" onclick="window.open('${v.link}','_blank')">Open Demo</button>
+          <button class="btn secondary" onclick="navigator.clipboard.writeText('${v.link}')">Copy Link</button>
+        `;
+        results.appendChild(card);
+      });
+    }
+
+    input.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = vendors.filter(v =>
+        v.name.toLowerCase().includes(q) ||
+        v.keyword.some(k => k.includes(q))
+      );
+      render(filtered);
+    });
+
+    render(vendors);
+  </script>
+</body>
+</html>
