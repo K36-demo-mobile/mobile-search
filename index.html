@@ -6,6 +6,7 @@
   <title>K36 Demo Mobile Search</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       background: #000;
@@ -13,14 +14,23 @@
       font-family: Arial, sans-serif;
       padding: 16px;
     }
+
     .wrap {
       max-width: 480px;
       margin: 0 auto;
     }
-    h2 {
-      margin: 0 0 16px;
+
+    h1 {
+      margin: 0 0 8px;
       font-size: 24px;
     }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: #888;
+      font-size: 14px;
+    }
+
     .search {
       width: 100%;
       padding: 14px 16px;
@@ -31,9 +41,17 @@
       font-size: 16px;
       outline: none;
     }
+
     .search::placeholder {
       color: #777;
     }
+
+    .meta {
+      margin: 12px 2px 0;
+      color: #888;
+      font-size: 13px;
+    }
+
     .card {
       margin-top: 16px;
       padding: 16px;
@@ -42,26 +60,58 @@
       background: #0b0b0b;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
     }
+
     .title {
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       font-size: 20px;
+      line-height: 1.3;
     }
+
+    .badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      color: #cfcfcf;
+      font-size: 12px;
+    }
+
     .text {
-      margin: 8px 0;
+      margin: 10px 0;
       color: #ddd;
       word-break: break-all;
       line-height: 1.5;
+      font-size: 14px;
     }
+
     .muted {
       color: #8a8a8a;
       font-size: 14px;
+      line-height: 1.5;
     }
+
+    .warning {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid #2a2a2a;
+      color: #f0f0f0;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     .btn-row {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 12px;
+      margin-top: 14px;
     }
+
     .btn {
       padding: 11px 14px;
       border: none;
@@ -70,16 +120,19 @@
       font-size: 14px;
       font-weight: 600;
     }
+
     .primary {
       background: #fff;
       color: #000;
     }
+
     .secondary {
       background: #1a1a1a;
       color: #fff;
       border: 1px solid #333;
     }
-    .empty {
+
+    .empty, .loading, .error {
       margin-top: 20px;
       color: #888;
       text-align: center;
@@ -87,51 +140,61 @@
       border: 1px dashed #333;
       border-radius: 16px;
     }
+
+    .logo {
+      width: 100%;
+      max-width: 120px;
+      max-height: 42px;
+      object-fit: contain;
+      margin: 0 0 10px;
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h2>📱 K36 Demo Search</h2>
-    <input id="searchInput" class="search" placeholder="搜尋遊戲商，例如 PG / EVO / JILI" />
+    <h1>📱 K36 Demo Search</h1>
+    <p class="subtitle">手機快速查詢遊戲商 Demo Link / 帳密</p>
+
+    <input id="searchInput" class="search" placeholder="搜尋遊戲商，例如 PG / EVO / JILI / SPORT" />
+    <div id="meta" class="meta">載入中...</div>
     <div id="results"></div>
   </div>
 
   <script>
-    const vendors = [
-      {
-        name: 'PG Soft',
-        keyword: ['pg', 'pg soft', 'pocket games'],
-        link: 'https://demo-link.com/pg',
-        user: 'demo001',
-        pass: '123456'
-      },
-      {
-        name: 'Evolution',
-        keyword: ['evo', 'evolution'],
-        link: 'https://demo-link.com/evo',
-        user: 'evo001',
-        pass: '654321'
-      },
-      {
-        name: 'JILI',
-        keyword: ['jili'],
-        link: 'https://demo-link.com/jili',
-        user: '',
-        pass: ''
-      }
-    ];
+    let vendors = [];
 
     const input = document.getElementById('searchInput');
     const results = document.getElementById('results');
+    const meta = document.getElementById('meta');
 
     function copyText(text, label) {
       navigator.clipboard.writeText(text).then(() => {
         alert(label + ' 已複製');
+      }).catch(() => {
+        alert('複製失敗，請手動複製');
       });
     }
 
-    function render(list) {
+    function getFullInfo(v) {
+      let text = `${v.displayName}\nLink: ${v.link}`;
+      if (v.needsPassword && v.passwordNote) {
+        text += `\nPassword Info: ${v.passwordNote}`;
+      }
+      return text;
+    }
+
+    function render(list, query = '') {
       results.innerHTML = '';
+
+      if (!vendors.length) {
+        meta.textContent = '尚未載入資料';
+        return;
+      }
+
+      meta.textContent = query
+        ? `找到 ${list.length} 筆結果`
+        : `共 ${vendors.length} 筆資料`;
 
       if (list.length === 0) {
         results.innerHTML = '<div class="empty">找不到符合的遊戲商</div>';
@@ -142,40 +205,73 @@
         const card = document.createElement('div');
         card.className = 'card';
 
+        const logoHtml = v.logo
+          ? `<img class="logo" src="${v.logo}" alt="${v.name}" onerror="this.style.display='none'" />`
+          : '';
+
+        const passwordHtml = v.needsPassword
+          ? `<div class="warning"><strong>🔐 帳密資訊：</strong><br>${v.passwordNote || '請查看原始備註'}</div>`
+          : `<p class="muted">此遊戲商不需要帳號密碼</p>`;
+
         card.innerHTML = `
-          <h3 class="title">🎮 ${v.name}</h3>
+          ${logoHtml}
+          <h3 class="title">${v.displayName}</h3>
+          <span class="badge">${v.type}</span>
           <p class="text"><strong>🔗 Demo Link：</strong><br>${v.link}</p>
-          ${
-            v.user
-              ? `<p class="text"><strong>👤 帳號：</strong> ${v.user}</p>
-                 <p class="text"><strong>🔒 密碼：</strong> ${v.pass}</p>`
-              : `<p class="muted">此遊戲商不需要帳號密碼</p>`
-          }
+          ${passwordHtml}
           <div class="btn-row">
             <button class="btn primary" onclick="window.open('${v.link}','_blank')">Open Demo</button>
-            <button class="btn secondary" onclick="copyText('${v.link}', '連結')">Copy Link</button>
-            ${
-              v.user
-                ? `<button class="btn secondary" onclick="copyText('${v.user}', '帳號')">Copy Account</button>
-                   <button class="btn secondary" onclick="copyText('${v.pass}', '密碼')">Copy Password</button>`
-                : ''
-            }
+            <button class="btn secondary" onclick='copyText(${JSON.stringify(v.link)}, "連結")'>Copy Link</button>
+            <button class="btn secondary" onclick='copyText(${JSON.stringify(getFullInfo(v))}, "完整資訊")'>Copy Full Info</button>
           </div>
         `;
         results.appendChild(card);
       });
     }
 
-    input.addEventListener('input', (e) => {
-      const q = e.target.value.trim().toLowerCase();
-      const filtered = vendors.filter(v =>
-        v.name.toLowerCase().includes(q) ||
-        v.keyword.some(k => k.toLowerCase().includes(q))
-      );
-      render(filtered);
+    function searchVendors(keyword) {
+      const q = keyword.trim().toLowerCase();
+
+      if (!q) {
+        render(vendors);
+        return;
+      }
+
+      const filtered = vendors.filter(v => {
+        const nameMatch = (v.name || '').toLowerCase().includes(q);
+        const displayMatch = (v.displayName || '').toLowerCase().includes(q);
+        const typeMatch = (v.type || '').toLowerCase().includes(q);
+        const keywordMatch = Array.isArray(v.keywords)
+          ? v.keywords.some(k => (k || '').toLowerCase().includes(q))
+          : false;
+
+        return nameMatch || displayMatch || typeMatch || keywordMatch;
+      });
+
+      render(filtered, q);
+    }
+
+    input.addEventListener('input', e => {
+      searchVendors(e.target.value);
     });
 
-    render(vendors);
+    async function init() {
+      results.innerHTML = '<div class="loading">資料載入中...</div>';
+
+      try {
+        const response = await fetch('./vendors.json');
+        if (!response.ok) throw new Error('vendors.json 載入失敗');
+
+        vendors = await response.json();
+        render(vendors);
+      } catch (error) {
+        console.error(error);
+        meta.textContent = '資料載入失敗';
+        results.innerHTML = '<div class="error">vendors.json 載入失敗，請檢查檔名與路徑是否正確。</div>';
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
