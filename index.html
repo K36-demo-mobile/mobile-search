@@ -5,51 +5,172 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>K36 Demo Mobile Search</title>
   <style>
-    body { background:#000; color:#fff; font-family: Arial, sans-serif; padding:16px; }
-    .search { width:100%; padding:14px; border-radius:14px; border:1px solid #333; background:#111; color:#fff; }
-    .card { margin-top:16px; padding:16px; border:1px solid #222; border-radius:18px; background:#0b0b0b; }
-    .btn { margin-top:10px; padding:10px 14px; border:none; border-radius:12px; cursor:pointer; }
-    .primary { background:#fff; color:#000; }
-    .secondary { background:#1a1a1a; color:#fff; border:1px solid #333; }
-    .hidden { display:none; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 16px;
+    }
+    .wrap {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    h2 {
+      margin: 0 0 16px;
+      font-size: 24px;
+    }
+    .search {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid #333;
+      background: #111;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+    .search::placeholder {
+      color: #777;
+    }
+    .card {
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px solid #222;
+      border-radius: 18px;
+      background: #0b0b0b;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset;
+    }
+    .title {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    .text {
+      margin: 8px 0;
+      color: #ddd;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .muted {
+      color: #8a8a8a;
+      font-size: 14px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn {
+      padding: 11px 14px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .primary {
+      background: #fff;
+      color: #000;
+    }
+    .secondary {
+      background: #1a1a1a;
+      color: #fff;
+      border: 1px solid #333;
+    }
+    .empty {
+      margin-top: 20px;
+      color: #888;
+      text-align: center;
+      padding: 24px 12px;
+      border: 1px dashed #333;
+      border-radius: 16px;
+    }
   </style>
 </head>
 <body>
-  <h2>📱 K36 Demo Search</h2>
-  <input id="searchInput" class="search" placeholder="搜尋遊戲商，例如 PG / EVO" />
-  <div id="results"></div>
+  <div class="wrap">
+    <h2>📱 K36 Demo Search</h2>
+    <input id="searchInput" class="search" placeholder="搜尋遊戲商，例如 PG / EVO / JILI" />
+    <div id="results"></div>
+  </div>
 
   <script>
     const vendors = [
-      { name: 'PG Soft', keyword: ['pg','pocket games'], link: 'https://demo-link.com/pg', user: 'demo001', pass: '123456' },
-      { name: 'Evolution', keyword: ['evo','evolution'], link: 'https://demo-link.com/evo', user: 'evo001', pass: '654321' },
-      { name: 'JILI', keyword: ['jili'], link: 'https://demo-link.com/jili', user: '', pass: '' }
+      {
+        name: 'PG Soft',
+        keyword: ['pg', 'pg soft', 'pocket games'],
+        link: 'https://demo-link.com/pg',
+        user: 'demo001',
+        pass: '123456'
+      },
+      {
+        name: 'Evolution',
+        keyword: ['evo', 'evolution'],
+        link: 'https://demo-link.com/evo',
+        user: 'evo001',
+        pass: '654321'
+      },
+      {
+        name: 'JILI',
+        keyword: ['jili'],
+        link: 'https://demo-link.com/jili',
+        user: '',
+        pass: ''
+      }
     ];
 
     const input = document.getElementById('searchInput');
     const results = document.getElementById('results');
 
+    function copyText(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(label + ' 已複製');
+      });
+    }
+
     function render(list) {
       results.innerHTML = '';
+
+      if (list.length === 0) {
+        results.innerHTML = '<div class="empty">找不到符合的遊戲商</div>';
+        return;
+      }
+
       list.forEach(v => {
         const card = document.createElement('div');
         card.className = 'card';
+
         card.innerHTML = `
-          <h3>🎮 ${v.name}</h3>
-          <p>🔗 ${v.link}</p>
-          ${v.user ? `<p>👤 ${v.user}</p><p>🔒 ${v.pass}</p>` : '<p>免帳密登入</p>'}
-          <button class="btn primary" onclick="window.open('${v.link}','_blank')">Open Demo</button>
-          <button class="btn secondary" onclick="navigator.clipboard.writeText('${v.link}')">Copy Link</button>
+          <h3 class="title">🎮 ${v.name}</h3>
+          <p class="text"><strong>🔗 Demo Link：</strong><br>${v.link}</p>
+          ${
+            v.user
+              ? `<p class="text"><strong>👤 帳號：</strong> ${v.user}</p>
+                 <p class="text"><strong>🔒 密碼：</strong> ${v.pass}</p>`
+              : `<p class="muted">此遊戲商不需要帳號密碼</p>`
+          }
+          <div class="btn-row">
+            <button class="btn primary" onclick="window.open('${v.link}','_blank')">Open Demo</button>
+            <button class="btn secondary" onclick="copyText('${v.link}', '連結')">Copy Link</button>
+            ${
+              v.user
+                ? `<button class="btn secondary" onclick="copyText('${v.user}', '帳號')">Copy Account</button>
+                   <button class="btn secondary" onclick="copyText('${v.pass}', '密碼')">Copy Password</button>`
+                : ''
+            }
+          </div>
         `;
         results.appendChild(card);
       });
     }
 
     input.addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
+      const q = e.target.value.trim().toLowerCase();
       const filtered = vendors.filter(v =>
         v.name.toLowerCase().includes(q) ||
-        v.keyword.some(k => k.includes(q))
+        v.keyword.some(k => k.toLowerCase().includes(q))
       );
       render(filtered);
     });
