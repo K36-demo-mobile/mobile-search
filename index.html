@@ -210,8 +210,8 @@
           : '';
 
         const passwordHtml = v.needsPassword
-          ? `<div class="warning"><strong>🔐 帳密資訊：</strong><br>${v.passwordNote || '請查看原始備註'}</div>`
-          : `<p class="muted">此遊戲商不需要帳號密碼</p>`;
+          ? `<div class="warning"><strong>🔐 Account&Password：</strong><br>${v.passwordNote || '請查看原始備註'}</div>`
+          : `<p class="muted">Don't need Account&Password </p>`;
 
         card.innerHTML = `
           ${logoHtml}
