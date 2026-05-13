@@ -2076,6 +2076,20 @@
     "passwordNote": ""
   },
   {
+    "id": "InOut-slot",
+    "name": "InOut",
+    "displayName": "InOut-slot",
+    "type": "Slot",
+    "keywords": [
+      "InOut",
+      "slot"
+    ],
+    "logo": "logos/InOut.png",
+    "link": "https://inout.games/games",
+    "needsPassword": false,
+    "passwordNote": ""
+  },
+  {
     "id": "saba-sport",
     "name": "SABA",
     "displayName": "SABA - Sport",
